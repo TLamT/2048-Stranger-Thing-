@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>2048</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            gap: 2em;
+            
+        }
+        h1{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 0.5em;
+            color: violet;
+            font: bold 5em "Arial", sans-serif;
+        }
+        body{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            flex-direction: column;
+            background-image: url("https://media.vogue.com.tw/photos/5db7e33822a7000008dc965f/master/w_1600%2Cc_limit/2019070865426665.jpg");
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            
+            
+        }
+        h2{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1em;
+            font: bold 1.5em "Arial", sans-serif;
+        }
+        #container {
+            display: grid;
+            grid-template-columns: repeat(4, 200px);
+            grid-template-rows: repeat(4, 200px);
+            gap: 5px;
+        }
+    
+        .cell {
+            background-color: #87CEFA;
+            border: 1px solid #000;
+            width: 200px;
+            height: 200px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 2em;
+        }
+    
+    .cell.new {
+        animation: fadeIn 0.5s ease-out;
+    }
+    .cell.merged {
+        animation: fadeIn 0.5s ease-out;
+    }
+    button{
+        margin-top: 1em;
+        padding: 0.5em 1em;
+        font-size: 1em;
+        cursor: pointer;
+    }
+    button:hover{
+        background-color: #87CEFA;
+    }
+    button:active{
+        background-color: #00BFFF;
+    }
+    button:focus{
+        outline: none;
+    }
+    @media (max-width: 900px) {
+        #container {
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 3px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            font-size: 1.5em;
+        }
+    }
+    @keyframes fadeIn {
+        to{
+        background-position-x: -500px;
+    }
+}
+    </style>
+</head>
+
+<body>
+    <h1>2048 Game</h1>
+    <h2>最高分數是:<span id="highScore">0</span></h2>
+    <h2>Time :<span id="time">0</span>s</h2>
+    <div id="container"></div>
+    <button id="restart">Start</button>
+    <script src="index.js"></script>
+</body>
+
+</html>
