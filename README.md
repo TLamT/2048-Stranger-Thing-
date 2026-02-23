@@ -17,3 +17,6 @@ Download or clone the project folder to your computer.
 Open index.html in your web browser.
 Use the arrow keys to slide and merge tiles.
 Click the "Start" button to restart the game.
+
+
+https://tlamt.github.io/2048-Stranger-Thing-/
