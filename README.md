@@ -4,7 +4,8 @@
 
 A logic-based puzzle game built with **Vanilla JavaScript**, featuring a custom "Stranger Things" theme. This project showcases the ability to translate complex game mechanics into efficient algorithms.
 
-👉 **[Play the Game Here](https://tlamt.github.io)**
+👉 [Play the Game Here](https://tlamt.github.io/2048-Stranger-Thing-/)
+
 
 ---
 
