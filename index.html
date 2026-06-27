@@ -1,114 +1,849 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
-    <meta charset="UTF-8" />
-    <title>2048</title>
-    <style>
-        *{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            gap: 2em;
-            
-        }
-        h1{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 0.5em;
-            color: violet;
-            font: bold 5em "Arial", sans-serif;
-        }
-        body{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            flex-direction: column;
-            background-image: url("https://media.vogue.com.tw/photos/5db7e33822a7000008dc965f/master/w_1600%2Cc_limit/2019070865426665.jpg");
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            
-            
-        }
-        h2{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 1em;
-            font: bold 1.5em "Arial", sans-serif;
-        }
-        #container {
-            display: grid;
-            grid-template-columns: repeat(4, 200px);
-            grid-template-rows: repeat(4, 200px);
-            gap: 5px;
-        }
-    
-        .cell {
-            background-color: #87CEFA;
-            border: 1px solid #000;
-            width: 200px;
-            height: 200px;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 2em;
-        }
-    
-    .cell.new {
-        animation: fadeIn 0.5s ease-out;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2048 - Stranger Things</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Oswald:wght@400;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    :root {
+      --accent: #cc0000;
+      --accent-dark: #550000;
+      --accent-sub: #880000;
+      --accent-glow: rgba(200,0,0,0.5);
+      --border-color: rgba(120,20,20,0.2);
+      --board-glow: rgba(180,0,0,0.08);
+      --bg-1: rgba(120,0,0,0.12);
+      --bg-2: rgba(80,0,0,0.08);
+      --bg-3: rgba(60,0,0,0.06);
+      --lights-colors: #ff2222, #ff6600, #ffcc00, #00cc44, #2266ff, #aa44ff;
     }
-    .cell.merged {
-        animation: fadeIn 0.5s ease-out;
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    button{
-        margin-top: 1em;
-        padding: 0.5em 1em;
-        font-size: 1em;
-        cursor: pointer;
+
+    body {
+      font-family: "Montserrat", Arial, sans-serif;
+      background: #050505;
+      overflow: hidden;
+      min-height: 100dvh;
+      background-size: cover !important;
+      background-position: center !important;
+      background-repeat: no-repeat !important;
     }
-    button:hover{
-        background-color: #87CEFA;
+    /* ---- layout ---- */
+    .layout {
+      display: flex;
+      height: 100dvh;
     }
-    button:active{
-        background-color: #00BFFF;
+
+    /* ---- sidebar ---- */
+    .sidebar {
+      width: 150px;
+      min-width: 150px;
+      background: rgba(0,0,0,0.7);
+      border-right: 1px solid rgba(255,255,255,0.04);
+      padding: 0.6rem 0;
+      overflow-y: auto;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(6px);
     }
-    button:focus{
-        outline: none;
+    .sidebar::-webkit-scrollbar {
+      width: 3px;
     }
-    @media (max-width: 900px) {
-        #container {
-            grid-template-columns: repeat(4, 100px);
-            grid-template-rows: repeat(4, 100px);
-            gap: 3px;
-        }
-        .cell {
-            width: 100px;
-            height: 100px;
-            font-size: 1.5em;
-        }
+    .sidebar::-webkit-scrollbar-track {
+      background: transparent;
     }
-    @keyframes fadeIn {
-        to{
-        background-position-x: -500px;
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.08);
     }
-}
-    </style>
+    .sidebar .label {
+      font-family: "Oswald", sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+      padding: 0.4rem 0.8rem 0.2rem;
+    }
+    .sidebar .char {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.45rem 0.8rem;
+      cursor: pointer;
+      font-family: "Oswald", sans-serif;
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.35);
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+      user-select: none;
+    }
+    .sidebar .char:hover {
+      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.03);
+    }
+    .sidebar .char.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255,255,255,0.04);
+    }
+    .sidebar .char .icon {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    /* ---- main content ---- */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    /* ---- Upside Down particles ---- */
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ---- Vines ---- */
+    .vine {
+      position: fixed;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.2;
+    }
+    .vine.tl {
+      top: 0; left: 0; width: 200px; height: 200px;
+      background:
+        radial-gradient(ellipse 120px 80px at 0% 0%, transparent 40%, rgba(40,15,10,0.5) 80%, transparent 100%),
+        radial-gradient(circle 60px at 30px 30px, rgba(30,10,5,0.4) 0%, transparent 70%);
+      transform: rotate(-10deg);
+    }
+    .vine.br {
+      bottom: 0; right: 0; width: 280px; height: 280px;
+      background:
+        radial-gradient(ellipse 160px 100px at 100% 100%, transparent 40%, rgba(40,15,10,0.5) 80%, transparent 100%),
+        radial-gradient(circle 80px at calc(100% - 40px) calc(100% - 40px), rgba(30,10,5,0.4) 0%, transparent 70%);
+      transform: rotate(15deg);
+    }
+
+    /* ---- scanline ---- */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent, transparent 2px,
+        rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* ---- Christmas lights ---- */
+    .lights {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 20px;
+      z-index: 3;
+      display: flex;
+      justify-content: space-around;
+      padding: 0 6px;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+    }
+    .lights .bulb {
+      width: 8px; height: 13px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      margin-top: 5px;
+      animation: flicker-light 2s ease-in-out infinite;
+      box-shadow: 0 0 4px 1px currentColor;
+    }
+    .lights .bulb:nth-child(odd)  { animation-delay: 0s; }
+    .lights .bulb:nth-child(even) { animation-delay: 1s; }
+
+    @keyframes flicker-light {
+      0%, 100% { opacity: 0.8; box-shadow: 0 0 4px 1px currentColor; }
+      20%  { opacity: 0.2; box-shadow: 0 0 1px 0px currentColor; }
+      22%  { opacity: 0.9; box-shadow: 0 0 6px 2px currentColor; }
+      50%  { opacity: 0.7; box-shadow: 0 0 4px 1px currentColor; }
+      52%  { opacity: 0.1; box-shadow: 0 0 0px 0px currentColor; }
+      55%  { opacity: 0.8; box-shadow: 0 0 6px 2px currentColor; }
+      80%  { opacity: 0.6; box-shadow: 0 0 3px 1px currentColor; }
+      82%  { opacity: 0.9; box-shadow: 0 0 5px 2px currentColor; }
+    }
+
+    /* ---- title ---- */
+    .title-wrap {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+    .title-wrap h1 {
+      font-family: "Oswald", sans-serif;
+      font-weight: 700;
+      font-size: clamp(2.2rem, 9vw, 5rem);
+      line-height: 0.95;
+      letter-spacing: 5px;
+      color: var(--accent);
+      text-shadow:
+        0 0 8px var(--accent-glow),
+        0 0 25px var(--accent-glow),
+        2px 2px 0 var(--accent-dark),
+        -1px -1px 0 var(--accent-dark);
+      filter: blur(0.5px);
+    }
+    .title-wrap h1 .sub {
+      display: block;
+      font-size: 0.3em;
+      letter-spacing: 12px;
+      font-weight: 400;
+      color: var(--accent-sub);
+      text-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    /* ---- Demogorgon ---- */
+    .demo-wrap {
+      position: relative;
+      z-index: 2;
+      width: 70px;
+      height: 70px;
+      margin-bottom: 0.2rem;
+      transition: transform 0.5s, opacity 0.5s;
+      opacity: 0.15;
+      transform: scale(0.6);
+    }
+    .demo-wrap.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .demo-wrap.roar {
+      animation: roar 0.4s ease-out;
+    }
+    @keyframes roar {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    .demo-face {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+    .demo-face .head {
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 55%, #2a0808, #0d0202);
+      border: 1px solid rgba(180,30,30,0.2);
+      z-index: 1;
+    }
+    .demo-face .head .eye {
+      position: absolute;
+      width: 12px; height: 12px;
+      background: radial-gradient(circle, var(--accent) 50%, transparent);
+      border-radius: 50%;
+      top: 22px;
+      box-shadow: 0 0 6px 2px color-mix(in srgb, var(--accent) 50%, transparent);
+    }
+    .demo-face .head .eye.l { left: 13px; }
+    .demo-face .head .eye.r { right: 13px; }
+    .demo-face .head .mouth {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 22px; height: 8px;
+      background: radial-gradient(ellipse, var(--accent-dark), transparent);
+      border-radius: 50%;
+    }
+
+    .demo-face .petal {
+      position: absolute;
+      width: 28px; height: 20px;
+      border-radius: 50% 50% 20% 20%;
+      background: radial-gradient(ellipse at 50% 60%, #3a1212, #1a0606);
+      border: 1px solid rgba(150,20,20,0.15);
+      z-index: 0;
+      transition: transform 0.4s ease;
+    }
+    .demo-face .petal.t  { top: -6px;  left: 50%; transform: translateX(-50%); }
+    .demo-face .petal.b  { bottom: -6px; left: 50%; transform: translateX(-50%); }
+    .demo-face .petal.l  { left: -8px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+    .demo-face .petal.r  { right: -8px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+    .demo-face .petal.tl { top: 0px; left: 2px; transform: rotate(-45deg); }
+    .demo-face .petal.tr { top: 0px; right: 2px; transform: rotate(45deg); }
+
+    .demo-wrap.open .petal.t  { transform: translateX(-50%) translateY(-10px) scale(1.1); }
+    .demo-wrap.open .petal.b  { transform: translateX(-50%) translateY(10px) scale(1.1); }
+    .demo-wrap.open .petal.l  { transform: translateY(-50%) translateX(-10px) scale(1.1) rotate(90deg); }
+    .demo-wrap.open .petal.r  { transform: translateY(-50%) translateX(10px) scale(1.1) rotate(90deg); }
+    .demo-wrap.open .petal.tl { transform: rotate(-45deg) translate(-8px,-8px) scale(1.1); }
+    .demo-wrap.open .petal.tr { transform: rotate(45deg) translate(8px,-8px) scale(1.1); }
+
+    .demo-wrap.open .head { box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 40%, transparent); }
+
+    /* ---- score / time ---- */
+    .info {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.6rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .info div {
+      font-family: "Oswald", sans-serif;
+      font-weight: 400;
+      font-size: clamp(0.75rem, 2.5vw, 1rem);
+      color: #888;
+      background: rgba(10, 0, 0, 0.7);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 2px;
+      padding: 0.25rem 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .info span {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1.2em;
+      text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+    }
+
+    /* ---- board ---- */
+    .board-wrap {
+      position: relative;
+      z-index: 2;
+      padding: 8px;
+      border-radius: 6px;
+      background: rgba(10,0,0,0.5);
+      box-shadow:
+        0 0 30px var(--board-glow),
+        0 0 60px var(--board-glow),
+        inset 0 0 20px rgba(0,0,0,0.5);
+      border: 1px solid var(--border-color);
+    }
+    .board-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), transparent 40%, transparent 60%, color-mix(in srgb, var(--accent) 10%, transparent));
+      pointer-events: none;
+    }
+
+    #container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      width: min(76vw, 360px);
+      aspect-ratio: 1;
+      border-radius: 3px;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 5px;
+    }
+
+    .cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 2px;
+      font-weight: 900;
+      font-size: clamp(1.1rem, 4.5vw, 2rem);
+      color: #411;
+      transition: transform 0.08s, background 0.08s;
+      user-select: none;
+      background: rgba(20, 5, 5, 0.5);
+      border: 1px solid rgba(60, 15, 15, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+    .cell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .cell.new { animation: popIn 0.12s ease-out; }
+    .cell.merged { animation: mergeFlash 0.15s ease-out; }
+
+    @keyframes popIn {
+      0%   { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes mergeFlash {
+      0%   { transform: scale(0.7); opacity: 0.3; }
+      50%  { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .tile-2    { background: #1a0808; color: #855; border-color: rgba(100,25,25,0.2); }
+    .tile-4    { background: #2a0e0e; color: #966; border-color: rgba(120,30,30,0.25); }
+    .tile-8    { background: #3d0e0e; color: #d88; border-color: rgba(160,35,35,0.3); }
+    .tile-16   { background: #5a0e0e; color: #e99; border-color: rgba(180,30,30,0.35); }
+    .tile-32   { background: #780a0a; color: #fbb; border-color: rgba(200,25,25,0.4); }
+    .tile-64   { background: #9a0808; color: #fdd; border-color: rgba(220,20,20,0.5); }
+    .tile-128  { background: #b80a0a; color: #fff; border-color: rgba(230,30,0,0.5); font-size: clamp(0.8rem, 3.5vw, 1.5rem); }
+    .tile-256  { background: #cc0e00; color: #fff; border-color: rgba(240,40,0,0.6); font-size: clamp(0.7rem, 3vw, 1.2rem); }
+    .tile-512  { background: #dd1800; color: #fff; border-color: rgba(255,50,0,0.7); font-size: clamp(0.65rem, 2.8vw, 1.1rem); }
+    .tile-1024 { background: #ee2400; color: #fff; border-color: rgba(255,60,0,0.8); font-size: clamp(0.6rem, 2.5vw, 1rem); }
+    .tile-2048 { background: #ff3300; color: #fff; border-color: #ff4400; box-shadow: 0 0 18px rgba(255,51,0,0.4); font-size: clamp(0.6rem, 2.5vw, 1rem); }
+    .tile-super { background: #0a0202; color: #422; border-color: rgba(60,10,10,0.2); font-size: clamp(0.5rem, 2vw, 0.75rem); }
+
+    /* ---- buttons ---- */
+    .controls {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.65rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .controls button {
+      padding: 0.4em 1.6em;
+      font-family: "Oswald", sans-serif;
+      font-size: clamp(0.8rem, 2.5vw, 1rem);
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 3px;
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 2px;
+      background: rgba(8, 0, 0, 0.6);
+      color: color-mix(in srgb, var(--accent) 70%, #888);
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .controls button:hover {
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+      box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 20%, transparent);
+      color: color-mix(in srgb, var(--accent) 90%, #fff);
+    }
+    .controls button:active { transform: scale(0.94); }
+
+    /* ---- dpad ---- */
+    .dpad {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 0.5rem;
+      width: min(110px, 30vw);
+    }
+    .dpad button {
+      padding: 0.45rem;
+      font-size: 1.2rem;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      line-height: 1;
+      font-family: "Montserrat", Arial, sans-serif;
+    }
+    .dpad .empty { visibility: hidden; }
+
+    /* ---- game over ---- */
+    .game-over {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+    .game-over .text {
+      font-family: "Oswald", sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.8rem, 7vw, 3rem);
+      letter-spacing: 4px;
+      color: var(--accent);
+      text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent), 0 0 40px color-mix(in srgb, var(--accent) 20%, transparent);
+      animation: demogorgon 3s infinite;
+    }
+    .game-over .sub {
+      font-family: "Oswald", sans-serif;
+      font-size: clamp(0.7rem, 2.5vw, 1rem);
+      color: #866;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+    }
+    @keyframes demogorgon {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      2%  { opacity: 0.3; transform: scale(1.02); }
+      4%  { opacity: 1; transform: scale(1); }
+      6%  { opacity: 0.5; transform: scale(0.98); }
+      8%  { opacity: 1; transform: scale(1); }
+      30% { opacity: 1; }
+      32% { opacity: 0.4; }
+      34% { opacity: 1; }
+    }
+
+    /* ---- mobile ---- */
+    @media (max-width: 700px) {
+      .sidebar {
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        padding: 0.3rem;
+        gap: 2px;
+      }
+      .sidebar .label { display: none; }
+      .sidebar .char {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+        white-space: nowrap;
+        border-left: none;
+        border-bottom: 2px solid transparent;
+        flex-shrink: 0;
+      }
+      .sidebar .char.active {
+        border-left-color: transparent;
+        border-bottom-color: var(--accent);
+      }
+      .sidebar .char .icon { font-size: 0.8rem; width: 16px; }
+      .layout { flex-direction: column; }
+      .demo-wrap { width: 50px; height: 50px; }
+      .lights .bulb { width: 5px; height: 9px; margin-top: 3px; }
+      #container { width: min(85vw, 340px); }
+    }
+  </style>
 </head>
-
 <body>
-    <h1>2048 Game</h1>
-    <h2>最高分數是:<span id="highScore">0</span></h2>
-    <h2>Time :<span id="time">0</span>s</h2>
-    <div id="container"></div>
-    <button id="restart">Start</button>
-    <script src="index.js"></script>
-</body>
+  <canvas id="particles"></canvas>
+  <div class="vine tl"></div>
+  <div class="vine br"></div>
 
+  <div class="lights" id="lights"></div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar"></div>
+
+    <!-- Main content -->
+    <div class="main">
+      <div class="title-wrap">
+        <h1>
+          STRANGER<br/>THINGS
+          <span class="sub">2048</span>
+        </h1>
+      </div>
+
+      <div class="demo-wrap" id="demoWrap">
+        <div class="demo-face" id="demoFace">
+          <div class="petal t"></div>
+          <div class="petal tl"></div>
+          <div class="petal tr"></div>
+          <div class="petal l"></div>
+          <div class="petal r"></div>
+          <div class="petal b"></div>
+          <div class="head">
+            <div class="eye l"></div>
+            <div class="eye r"></div>
+            <div class="mouth"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info">
+        <div>SCORE <span id="highScore">0</span></div>
+        <div>TIME <span id="time">0</span>s</div>
+      </div>
+
+      <div class="board-wrap">
+        <div id="container"></div>
+      </div>
+
+      <div class="controls">
+        <button id="restart">▶ START</button>
+      </div>
+
+      <div class="dpad">
+        <div class="empty"></div>
+        <button data-dir="up">▲</button>
+        <div class="empty"></div>
+        <button data-dir="left">◀</button>
+        <button data-dir="down">▼</button>
+        <button data-dir="right">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+  <script>
+    // ---- Themes ----
+    const themes = {
+      default: {
+        label: '👾 Upside Down',
+        bg: '',
+        accent: '#cc0000',
+        accentDark: '#550000',
+        accentSub: '#880000',
+        lights: ['#ff2222', '#ff6600', '#ffcc00', '#00cc44', '#2266ff', '#aa44ff'],
+      },
+      eleven: {
+        label: '🦋 Eleven',
+        bg: 'https://wallpapers.com/images/high/stranger-things-cast-eleven-grlln6lqqvav0mxi.jpg',
+        accent: '#ff69b4',
+        accentDark: '#8b0040',
+        accentSub: '#c04080',
+        lights: ['#ff69b4', '#ff1493', '#db7090', '#ffb6c1', '#ff69b4', '#ff1493'],
+      },
+      mike: {
+        label: '⚡ Mike',
+        bg: 'https://wallpapers.com/images/high/stranger-things-cast-mike-wheeler-k08mbo9yx9o9z6ry.jpg',
+        accent: '#4169e1',
+        accentDark: '#1a237e',
+        accentSub: '#5c6bc0',
+        lights: ['#4169e1', '#1e90ff', '#00bfff', '#6495ed', '#4169e1', '#1e90ff'],
+      },
+      will: {
+        label: '🎨 Will',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-will-byers-n191s00iwjqxrgnw.jpg',
+        accent: '#66bb6a',
+        accentDark: '#2e7d32',
+        accentSub: '#81c784',
+        lights: ['#66bb6a', '#4caf50', '#81c784', '#a5d6a7', '#66bb6a', '#4caf50'],
+      },
+      dustin: {
+        label: '📡 Dustin',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-dustin-henderson-g3ak701jwwwi0jax.jpg',
+        accent: '#ffb300',
+        accentDark: '#8d6e00',
+        accentSub: '#cc9900',
+        lights: ['#ffb300', '#ffca28', '#ffd54f', '#ffe082', '#ffb300', '#ffca28'],
+      },
+      lucas: {
+        label: '🏹 Lucas',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-lucas-sinclair-7rg10wci0sjboqin.jpg',
+        accent: '#e53935',
+        accentDark: '#8e0000',
+        accentSub: '#c62828',
+        lights: ['#e53935', '#ff1744', '#d50000', '#ff5252', '#e53935', '#ff1744'],
+      },
+      max: {
+        label: '🛹 Max',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-max-mayfield-eb1a5btnq9vybotb.jpg',
+        accent: '#ff6d00',
+        accentDark: '#a04000',
+        accentSub: '#e65100',
+        lights: ['#ff6d00', '#ff9100', '#ffab40', '#ffd180', '#ff6d00', '#ff9100'],
+      },
+      steve: {
+        label: '🍦 Steve',
+        bg: 'https://wallpapers.com/images/high/steve-harrington-stranger-things-scene-9m1ofjd21sndp08i.jpg',
+        accent: '#26c6da',
+        accentDark: '#00695c',
+        accentSub: '#4dd0e1',
+        lights: ['#26c6da', '#00bcd4', '#4dd0e1', '#80deea', '#26c6da', '#00bcd4'],
+      },
+      nancy: {
+        label: '📰 Nancy',
+        bg: 'https://wallpapers.com/images/high/stranger-things-cast-nancy-wheeler-z5ig1vtnnu6mlnsc.jpg',
+        accent: '#5c6bc0',
+        accentDark: '#283593',
+        accentSub: '#7986cb',
+        lights: ['#5c6bc0', '#3f51b5', '#7986cb', '#9fa8da', '#5c6bc0', '#3f51b5'],
+      },
+      joyce: {
+        label: '💡 Joyce',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-joyce-byers-kz2ozjw5ni3joh92.jpg',
+        accent: '#ff8f00',
+        accentDark: '#994d00',
+        accentSub: '#cc7700',
+        lights: ['#ff8f00', '#ffa000', '#ffb300', '#ffca28', '#ff8f00', '#ffa000'],
+      },
+      hopper: {
+        label: '👮 Hopper',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-jim-hopper-kdjsq8imaink4yjn.jpg',
+        accent: '#558b2f',
+        accentDark: '#33691e',
+        accentSub: '#689f38',
+        lights: ['#558b2f', '#689f38', '#7cb342', '#9ccc65', '#558b2f', '#689f38'],
+      },
+      robin: {
+        label: '🎵 Robin',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-robin-buckley-phft7huue4ebiscm.jpg',
+        accent: '#ab47bc',
+        accentDark: '#6a1b9a',
+        accentSub: '#ce93d8',
+        lights: ['#ab47bc', '#ce93d8', '#ba68c8', '#e1bee7', '#ab47bc', '#ce93d8'],
+      },
+      eddie: {
+        label: '🎸 Eddie',
+        bg: 'https://wallpapers.com/images/high/stranger-things-4-eddie-munson-z5ez4wq2roreta7x.jpg',
+        accent: '#b71c1c',
+        accentDark: '#4a0000',
+        accentSub: '#880000',
+        lights: ['#b71c1c', '#880000', '#cc0000', '#660000', '#b71c1c', '#880000'],
+      },
+      vecna: {
+        label: '👁 Vecna',
+        bg: 'https://wallpapers.com/images/high/stranger-things-vecna-wc0mhxrxqol3b4xs.jpg',
+        accent: '#4e342e',
+        accentDark: '#1a0000',
+        accentSub: '#3e2723',
+        lights: ['#4e342e', '#3e2723', '#5d4037', '#6d4c41', '#4e342e', '#3e2723'],
+      },
+      flayer: {
+        label: '🌀 Mind Flayer',
+        bg: 'https://wallpapers.com/images/high/stranger-things-3-cast-mind-flayer-0x71d9e3t4w1f3wy.jpg',
+        accent: '#7b1fa2',
+        accentDark: '#2a0033',
+        accentSub: '#4a148c',
+        lights: ['#7b1fa2', '#9c27b0', '#ba68c8', '#ce93d8', '#7b1fa2', '#9c27b0'],
+      },
+    };
+
+    // ---- Build sidebar ----
+    const sidebar = document.getElementById('sidebar');
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = 'Characters';
+    sidebar.appendChild(label);
+
+    let currentTheme = 'default';
+
+    function applyTheme(name) {
+      const t = themes[name];
+      if (!t) return;
+      const root = document.documentElement;
+      root.style.setProperty('--accent', t.accent);
+      root.style.setProperty('--accent-dark', t.accentDark);
+      root.style.setProperty('--accent-sub', t.accentSub);
+      root.style.setProperty('--accent-glow', t.accent + '80');
+      root.style.setProperty('--border-color', t.accent + '33');
+      root.style.setProperty('--board-glow', t.accent + '20');
+      // background image with dark overlay
+      if (t.bg) {
+        document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('${t.bg}')`;
+      } else {
+        document.body.style.backgroundImage = 'none';
+        document.body.style.background = '#050505';
+      }
+      // rebuild lights
+      rebuildLights(t.lights);
+      // update active
+      document.querySelectorAll('.sidebar .char').forEach(el => el.classList.remove('active'));
+      const activeEl = sidebar.querySelector(`[data-theme="${name}"]`);
+      if (activeEl) activeEl.classList.add('active');
+      currentTheme = name;
+    }
+
+    Object.keys(themes).forEach((key) => {
+      const t = themes[key];
+      const el = document.createElement('div');
+      el.className = 'char' + (key === 'default' ? ' active' : '');
+      el.dataset.theme = key;
+      el.innerHTML = `<span class="icon">${t.label.split(' ')[0]}</span> ${t.label.split(' ').slice(1).join(' ')}`;
+      el.addEventListener('click', () => applyTheme(key));
+      sidebar.appendChild(el);
+    });
+
+    // ---- Christmas lights ----
+    const lightsEl = document.getElementById('lights');
+
+    function rebuildLights(colors) {
+      lightsEl.innerHTML = '';
+      for (let i = 0; i < 40; i++) {
+        const bulb = document.createElement('div');
+        bulb.className = 'bulb';
+        bulb.style.color = colors[i % colors.length];
+        lightsEl.appendChild(bulb);
+      }
+    }
+    rebuildLights(themes.default.lights);
+
+    // ---- Demogorgon control ----
+    const demoWrap = document.getElementById('demoWrap');
+    const demoFace = document.getElementById('demoFace');
+    let lastRoarScore = 0;
+
+    window.updateDemogorgon = function(score, merged) {
+      if (score >= 32) {
+        demoWrap.classList.add('active');
+        if (score >= 128) {
+          demoFace.classList.add('open');
+        } else {
+          demoFace.classList.remove('open');
+        }
+        if (merged && score > lastRoarScore) {
+          demoWrap.classList.remove('roar');
+          void demoWrap.offsetWidth;
+          demoWrap.classList.add('roar');
+          lastRoarScore = score;
+        }
+      } else {
+        demoWrap.classList.remove('active');
+        demoFace.classList.remove('open');
+      }
+    };
+
+    // ---- Upside Down particles ----
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let W, H;
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles = [];
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: 1 + Math.random() * 2.5,
+        dx: (Math.random() - 0.5) * 0.3,
+        dy: -(0.1 + Math.random() * 0.25),
+        a: 0.2 + Math.random() * 0.4,
+        pulse: Math.random() * Math.PI * 2,
+      });
+    }
+    function drawParticles() {
+      ctx.clearRect(0, 0, W, H);
+      for (const p of particles) {
+        p.x += p.dx; p.y += p.dy;
+        p.pulse += 0.008;
+        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+        if (p.x < -10) p.x = W + 10;
+        if (p.x > W + 10) p.x = -10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(160, 80, 60, ${p.a * (0.6 + 0.4 * Math.sin(p.pulse))})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+  </script>
+</body>
 </html>
