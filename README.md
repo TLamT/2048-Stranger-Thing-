@@ -2,7 +2,7 @@
 
 A logic-based puzzle game with a custom Stranger Things theme.
 
-👉 [Play the Game Here](https://tlamt.github.io/2048-Stranger-Thing-/)
+👉 [Play the Game Here](https://2048-stranger-thing.vercel.app)
 
 ---
 
